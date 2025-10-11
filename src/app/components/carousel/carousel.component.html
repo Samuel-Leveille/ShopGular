@@ -1,0 +1,32 @@
+<div id="carouselBase">
+  <div id="articlesPopulairesTitreDiv">
+    <h2 id="articlesPopulairesTitre">Articles populaires du moment</h2>
+  </div>
+  <p-carousel
+    [value]="products"
+    [numVisible]="3"
+    [numScroll]="3"
+    [circular]="false"
+    [autoplayInterval]="0"
+    [responsiveOptions]="responsiveOptions"
+    [showIndicators]="false"
+    id="carousel"
+  >
+    <ng-template let-product pTemplate="item">
+      <div class="border-1 surface-border border-round m-2 p-3">
+        <div class="mb-3">
+          <div class="relative mx-auto">
+            <img
+              [src]="product.image"
+              [alt]="product.title"
+              width="180"
+              id="item-image"
+            />
+            <h2>{{ product.title }}</h2>
+            <p>{{ product.price | currency }}</p>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-carousel>
+</div>
