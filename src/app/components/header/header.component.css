@@ -1,0 +1,12 @@
+#headerItems {
+    text-decoration: none;
+    margin-right: 20px;
+    font-size: larger;
+    font-weight: 500;
+    color: rgba(155, 42, 110, 1);
+}
+
+#headerTemplate {
+    margin-left: auto;
+    margin-right: auto;
+}
