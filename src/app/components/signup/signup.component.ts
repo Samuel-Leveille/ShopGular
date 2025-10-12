@@ -1,0 +1,20 @@
+import { Component } from '@angular/core';
+import { UserSignup } from '../../model/userSignup';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-signup',
+  standalone: true,
+  imports: [FormsModule],
+  templateUrl: './signup.component.html',
+  styleUrl: './signup.component.css'
+})
+export class SignupComponent {
+  lienConnexion: string = "login";
+
+  userSignup: UserSignup = new UserSignup;
+
+  onSignup() {
+    console.log(this.userSignup);
+  }
+}

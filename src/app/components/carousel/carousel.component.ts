@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CarouselModule } from 'primeng/carousel';
 import { ProductsService } from '../../services/products/products.service';
-import { Product } from '../../model/product';
+import { Product } from '../../model/productInterface';
 
 @Component({
   selector: 'app-carousel',

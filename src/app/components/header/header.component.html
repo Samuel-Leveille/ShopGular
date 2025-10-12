@@ -9,6 +9,7 @@
         class="flex align-items-center p-menuitem-link mt-3"
         id="headerItems"
         *ngIf="item"
+        [href]="item.link"
       >
         <span class="material-icons">{{ item.icon }}</span>
         <span class="ml-2">{{ item.label }}</span>

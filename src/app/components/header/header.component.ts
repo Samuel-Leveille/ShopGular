@@ -20,20 +20,26 @@ export class HeaderComponent implements OnInit {
   ngOnInit(): void {
     this.items = [
       {
-          label: 'Home',
-          icon: 'home'
+          label: 'Menu',
+          icon: 'home',
+          link: ''
       },
       {
-          label: 'My Cart',
-          icon: 'shopping_cart'
+          label: 'Mon Panier',
+          icon: 'shopping_cart',
       },
       {
-          label: 'My profil',
+          label: 'Mon profil',
           icon: 'account_circle'
       },
       {
-          label: 'Contact',
+          label: 'Nous contacter',
           icon: 'mail'
+      },
+      {
+          label: 'Connexion',
+          icon: 'login',
+          link: 'login'
       }
   ];
   }
