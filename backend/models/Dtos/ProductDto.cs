@@ -1,0 +1,2 @@
+namespace ShopGular.Backend.Models.Dtos;
+public record ProductDto(string productTitle, string productDescription, double productPrice, string productCategory, string productImage, int productQuantity, ProductTag productTag);
