@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using ShopGular.Backend;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>

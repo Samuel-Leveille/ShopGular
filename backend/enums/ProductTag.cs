@@ -1,5 +1,6 @@
 namespace ShopGular.Backend.Enums;
-enum ProductTag{
+public enum ProductTag
+{
     InStock,
     Low,
     OutOfStock

@@ -1,13 +1,21 @@
+using ShopGular.Backend.Models;
 using ShopGular.Backend.Models.Dtos;
-using ShopGular.Backend.DbContext;
 namespace ShopGular.Backend.Services;
-public class SellerService {
+public class SellerService
+{
 
     private readonly AppDbContext _context;
 
-    public SellerService(AppDbContext context) {
-        _context = context
+    public SellerService(AppDbContext context)
+    {
+        _context = context;
     }
 
-    public AddNewProduct(ProductDto)
+    public ProductDto AddProduct(CreateProductDto product)
+    {
+        Product entity = Product.ToEntityNewProduct(product);
+        _context.Products.Add(entity);
+        _context.SaveChanges();
+        return Product.ToDto(entity);
+    }
 }
