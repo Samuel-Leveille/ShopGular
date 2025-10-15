@@ -15,7 +15,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("product/{id}")]
     public IActionResult GetProductById(long id)
     {
         ProductDto? product = _userService.GetProductById(id);

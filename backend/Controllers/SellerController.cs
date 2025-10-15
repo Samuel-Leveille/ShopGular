@@ -17,10 +17,24 @@ public class SellerController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost]
+    [HttpPost("add-product")]
     public IActionResult AddProduct(CreateProductDto product)
     {
-        ProductDto productDto = _sellerService.AddProduct(product);
-        return CreatedAtAction(nameof(_userService.GetProductById), new { id = productDto.Id }, productDto);
+        ProductDto? productDto = _sellerService.AddProduct(product);
+        return CreatedAtAction(nameof(_userService.GetProductById), new { id = productDto?.Id }, productDto);
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult GetSellerById(long id)
+    {
+        SellerDto? sellerDto = _sellerService.GetSellerById(id);
+        return Ok(sellerDto);
+    }
+
+    [HttpPost("signup")]
+    public IActionResult SignUp(SignUpSellerDto dto)
+    {
+        SellerDto? sellerDto = _sellerService.SignUp(dto);
+        return CreatedAtAction(nameof(GetSellerById), new { id = sellerDto?.Id }, sellerDto);
     }
 }
