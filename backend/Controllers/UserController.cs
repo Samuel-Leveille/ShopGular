@@ -16,10 +16,18 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("product/{id}")]
-    public IActionResult GetProductById(long id)
+    public async Task<IActionResult> GetProductById(long id)
     {
-        ProductDto? product = _userService.GetProductById(id);
+        ProductDto? product = await _userService.GetProductById(id);
         if (product == null) return NotFound();
         return Ok(product);
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginDto dto)
+    {
+        UserDto? user = await _userService.Login(dto);
+        if (user == null) return Unauthorized();
+        return Ok(user);
     }
 }

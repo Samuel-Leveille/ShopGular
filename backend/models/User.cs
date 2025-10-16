@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ShopGular.Backend.Models.Dtos;
 
 namespace ShopGular.Backend.Models;
 public class User
@@ -16,5 +17,10 @@ public class User
         Name = name;
         Email = email;
         Password = password;
+    }
+
+    public static UserDto ToDto(User user)
+    {
+        return new UserDto(user.Id, user.Name, null, user.Email, null);
     }
 }

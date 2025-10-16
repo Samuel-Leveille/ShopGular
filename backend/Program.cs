@@ -1,14 +1,24 @@
 using Microsoft.EntityFrameworkCore;
 using ShopGular.Backend;
+using ShopGular.Backend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb")));
 
+builder.Services.AddControllers();
+
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<SellerService>();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", () => "wassup");
+app.UseCors(options =>
+    options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
+);
+
+app.MapControllers();
 
 app.Run();

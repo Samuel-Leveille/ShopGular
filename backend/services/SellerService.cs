@@ -12,6 +12,25 @@ public class SellerService
         _context = context;
     }
 
+    public SellerDto? GetSellerById(long id)
+    {
+        Seller? seller = null;
+        try
+        {
+            seller = _context.Sellers.Find(id);
+            if (seller == null)
+            {
+                Console.WriteLine($"User seller avec id {id} introuvable");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de l'obtention d'un utilisateur seller par son id : {ex.Message}");
+        }
+        return seller != null ? Seller.ToDto(seller) : null;
+    }
+
     public ProductDto? AddProduct(CreateProductDto product)
     {
         Product? entity = null;
@@ -34,31 +53,13 @@ public class SellerService
         try
         {
             seller = Seller.SignUpDtoToEntity(dto);
+            seller.Password = PasswordHashing.HashPassword(dto.Password);
             _context.Sellers.Add(seller);
             _context.SaveChanges();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la tentative d'ajout d'un nouvel utilisateur seller : {ex.Message}");
-        }
-        return seller != null ? Seller.ToDto(seller) : null;
-    }
-
-    public SellerDto? GetSellerById(long id)
-    {
-        Seller? seller = null;
-        try
-        {
-            seller = _context.Sellers.Find(id);
-            if (seller == null)
-            {
-                Console.WriteLine($"User seller avec id {id} introuvable");
-                return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de l'obtention d'un utilisateur seller par son id : {ex.Message}");
         }
         return seller != null ? Seller.ToDto(seller) : null;
     }

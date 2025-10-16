@@ -4,7 +4,7 @@ using ShopGular.Backend.Services;
 
 namespace ShopGular.Backend.Controllers;
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/user/[controller]")]
 public class SellerController : ControllerBase
 {
 
@@ -37,4 +37,6 @@ public class SellerController : ControllerBase
         SellerDto? sellerDto = _sellerService.SignUp(dto);
         return CreatedAtAction(nameof(GetSellerById), new { id = sellerDto?.Id }, sellerDto);
     }
+
+
 }
