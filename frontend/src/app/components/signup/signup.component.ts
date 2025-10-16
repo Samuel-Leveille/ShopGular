@@ -1,20 +1,40 @@
 import { Component } from '@angular/core';
-import { UserSignup } from '../../model/userSignup';
+import { SellerSignup } from '../../model/sellerSignup';
 import { FormsModule } from '@angular/forms';
+import { UsersService } from '../../services/users/users.service';
+import { UserLogin } from '../../model/userLogin';
+import { ClientSignup } from '../../model/clientSignup';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NgIf],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.css'
 })
 export class SignupComponent {
+
+  constructor(private _usersService: UsersService) {}
+
   lienConnexion: string = "login";
 
-  userSignup: UserSignup = new UserSignup;
+  sellerSignup: SellerSignup = new SellerSignup;
+  clientSignup: ClientSignup = new ClientSignup;
+  user: any;
 
-  onSignup() {
-    console.log(this.userSignup);
+  isSeller: boolean = false;
+
+  onSignupSeller() {
+    this.user = this._usersService.signUpSeller(this.isSeller ? this.sellerSignup : this.clientSignup).subscribe((newUser => {
+      if (this.sellerSignup.email === newUser.email) {
+        this.login(newUser);
+      }
+    }))
+  }
+
+  login(user: any) {
+    let userLogin: UserLogin = new UserLogin(user.email, user.password);
+    this._usersService.login(userLogin);
   }
 }

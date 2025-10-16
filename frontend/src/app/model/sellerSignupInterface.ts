@@ -1,5 +1,4 @@
-export interface UserSignupInterface {
-    firstname: string;
+export interface SellerSignupInterface {
     name: string;
     email: string;
     password: string;

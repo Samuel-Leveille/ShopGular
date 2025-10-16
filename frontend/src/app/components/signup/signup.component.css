@@ -42,6 +42,7 @@
     font-size: 15px;
     outline: none;
     transition: border-color 0.2s ease;
+    margin-bottom: 20px;
 }
   
 .form-group input:focus {
@@ -92,3 +93,13 @@
     text-decoration: underline;
 }
 
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+  
+.checkbox-group label {
+    cursor: pointer;
+    font-weight: normal;
+}

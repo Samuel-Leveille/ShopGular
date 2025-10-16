@@ -1,6 +1,6 @@
-import { UserSignupInterface } from "./userSignupInterface";
+import { ClientSignupInterface } from "./clientSignupInterface";
 
-export class UserSignup implements UserSignupInterface {
+export class ClientSignup implements ClientSignupInterface {
     firstname: string = "";
     name: string = "";
     email: string = "";
