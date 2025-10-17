@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using ShopGular.Backend.Models.Dtos;
 
 namespace ShopGular.Backend.Models;
+[Table("Users")]
 public class User
 {
     [Key]

@@ -3,7 +3,7 @@ using ShopGular.Backend.Models.Dtos;
 namespace ShopGular.backend.Models;
 public class Seller : User
 {
-    public List<Product>? ProductsForSale;
+    public List<Product>? ProductsForSale { get; set; } = new();
 
     public Seller(string name, string email, string password) : base(name, email, password) { }
 

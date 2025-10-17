@@ -1,10 +1,15 @@
 <div class="signup-container">
   <h2 id="titre">Créer un compte</h2>
 
-  <form #signupForm="ngForm" (ngSubmit)="onSignupSeller()" class="signup-form">
+  <form #signupForm="ngForm" (ngSubmit)="onSignup()" class="signup-form">
     <div class="form-group checkbox-group">
       <label>
-        <input type="checkbox" [(ngModel)]="isSeller" name="isSeller" />
+        <input
+          type="checkbox"
+          [(ngModel)]="isSeller"
+          name="isSeller"
+          (ngModelChange)="onIsSellerChanged($event)"
+        />
         S'inscrire comme vendeur
       </label>
     </div>

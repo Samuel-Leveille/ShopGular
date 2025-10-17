@@ -25,16 +25,40 @@ export class SignupComponent {
 
   isSeller: boolean = false;
 
-  onSignupSeller() {
-    this.user = this._usersService.signUpSeller(this.isSeller ? this.sellerSignup : this.clientSignup).subscribe((newUser => {
-      if (this.sellerSignup.email === newUser.email) {
-        this.login(newUser);
-      }
-    }))
+  onSignup() {
+    if (this.isSeller) {
+      this.user = this._usersService.signUpSeller(this.sellerSignup).subscribe((newUser => {
+        if (this.sellerSignup.email === newUser.email) {
+          this.login(newUser);
+        }
+      }));
+    } else {
+      this.user = this._usersService.signUpClient(this.clientSignup).subscribe((newUser => {
+        if (this.clientSignup.email === newUser.email) {
+          this.login(newUser);
+        }
+      }));
+    }
   }
 
   login(user: any) {
     let userLogin: UserLogin = new UserLogin(user.email, user.password);
     this._usersService.login(userLogin);
   }
+
+  onIsSellerChanged(value: boolean) {
+    if (value) {
+      this.clientSignup.email = "";
+      this.clientSignup.firstname = "";
+      this.clientSignup.name = "";
+      this.clientSignup.password = "";
+      this.clientSignup.confirmPassword = "";
+    } else {
+      this.sellerSignup.email = "";
+      this.sellerSignup.name = "";
+      this.sellerSignup.password = "";
+      this.sellerSignup.confirmPassword = "";
+    }
+  }
+
 }

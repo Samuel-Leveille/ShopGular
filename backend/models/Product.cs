@@ -2,6 +2,7 @@ using ShopGular.Backend.Models.Dtos;
 using ShopGular.Backend.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ShopGular.backend.Models;
 namespace ShopGular.Backend.Models;
 public class Product
 {
@@ -13,11 +14,15 @@ public class Product
     public double Price { get; set; }
     public string Category { get; set; }
     public string Image { get; set; }
-    public List<int>? Ratings { get; set; }
+    public List<int>? Ratings { get; set; } = new();
     public int Quantity { get; set; }
     public ProductTag Tag { get; set; }
     public int PurchaseQuantity { get; set; }
     public DateTime DateOfSale { get; private set; }
+    public Client BoughtByClient { get; set; }
+    public long BoughtByClientFK { get; set; }
+    public Client InShoppingCartByClient { get; set; }
+    public long InShoppingCartByClientFK { get; set; }
 
     public Product(string title, string description, double price, string category, string image, int quantity, int purchaseQuantity, ProductTag tag)
     {

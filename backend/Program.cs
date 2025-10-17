@@ -10,14 +10,22 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SellerService>();
+builder.Services.AddScoped<ClientService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policy => policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.UseCors(options =>
-    options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
-);
+app.UseCors("AllowLocalhost");
 
 app.MapControllers();
 

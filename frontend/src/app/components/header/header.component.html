@@ -1,9 +1,18 @@
 <div class="card py-2">
   <p-menubar [model]="items" id="headerTemplate">
     <ng-template pTemplate="start">
-      <img src="favicon.ico" alt="logo" width="38" height="38" />
+      <div id="logoAndTitleDiv">
+        <img
+          src="favicon.ico"
+          alt="logo"
+          width="38"
+          height="38"
+          id="logoHeader"
+        />
+        <h1>ShopGular</h1>
+      </div>
     </ng-template>
-    <ng-template pTemplate="item" let-item let-root="root">
+    <ng-template pTemplate="item" let-item let-root="root" id="shoppingItems">
       <a
         pRipple
         class="flex align-items-center p-menuitem-link mt-3"

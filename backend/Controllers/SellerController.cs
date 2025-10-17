@@ -10,18 +10,20 @@ public class SellerController : ControllerBase
 
     private readonly SellerService _sellerService;
     private readonly UserService _userService;
+    private readonly UserController _userController;
 
-    public SellerController(SellerService sellerService, UserService userService)
+    public SellerController(SellerService sellerService, UserService userService, UserController userController)
     {
         _sellerService = sellerService;
         _userService = userService;
+        _userController = userController;
     }
 
     [HttpPost("add-product")]
     public IActionResult AddProduct(CreateProductDto product)
     {
         ProductDto? productDto = _sellerService.AddProduct(product);
-        return CreatedAtAction(nameof(_userService.GetProductById), new { id = productDto?.Id }, productDto);
+        return CreatedAtAction(nameof(_userController.GetProductById), new { id = productDto?.Id }, productDto);
     }
 
     [HttpGet("{id}")]
