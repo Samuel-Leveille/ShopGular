@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ShopGular.Backend.Models.Dtos;
+using ShopGular.backend.Models;
 
 namespace ShopGular.Backend.Models;
 [Table("Users")]
@@ -22,6 +23,11 @@ public class User
 
     public static UserDto ToDto(User user)
     {
-        return new UserDto(user.Id, user.Name, null, user.Email, null);
+        string? first = null;
+        if (user is Client c)
+        {
+            first = c.FirstName;
+        }
+        return new UserDto(user.Id, user.Name, first, user.Email, null);
     }
 }

@@ -40,4 +40,19 @@ public class UserService
         }
         return user != null ? User.ToDto(user) : null;
     }
+
+    public async Task<User?> LoginEntity(LoginDto dto)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+        if (user == null || !PasswordHashing.VerifyPassword(dto.Password, user.Password))
+        {
+            return null;
+        }
+        return user;
+    }
+
+    public async Task<User?> GetUserById(long id)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+    }
 }

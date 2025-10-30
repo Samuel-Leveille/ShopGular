@@ -18,7 +18,7 @@ namespace backend.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -61,7 +61,7 @@ namespace backend.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.PrimitiveCollection<List<int>>("Ratings")
+                    b.Property<List<int>>("Ratings")
                         .HasColumnType("integer[]");
 
                     b.Property<long?>("SellerId")
@@ -83,6 +83,35 @@ namespace backend.Migrations
                     b.HasIndex("SellerId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("ShopGular.Backend.Models.RefreshToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("ShopGular.Backend.Models.User", b =>
@@ -162,6 +191,17 @@ namespace backend.Migrations
                     b.Navigation("BoughtByClient");
 
                     b.Navigation("InShoppingCartByClient");
+                });
+
+            modelBuilder.Entity("ShopGular.Backend.Models.RefreshToken", b =>
+                {
+                    b.HasOne("ShopGular.Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ShopGular.backend.Models.Client", b =>

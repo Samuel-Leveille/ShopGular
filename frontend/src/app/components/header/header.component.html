@@ -12,6 +12,11 @@
         <h1>ShopGular</h1>
       </div>
     </ng-template>
+  <ng-template pTemplate="end">
+    <div *ngIf="userName || firstName" style="margin-left:auto; padding-right: 12px; font-weight: 500;">
+      Bonjour, {{ firstName || userName }}
+    </div>
+  </ng-template>
     <ng-template pTemplate="item" let-item let-root="root" id="shoppingItems">
       <a
         pRipple

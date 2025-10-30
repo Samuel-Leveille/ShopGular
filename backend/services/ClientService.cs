@@ -35,6 +35,13 @@ public class ClientService
         Client? client = null;
         try
         {
+            // Vérifie si l'email existe déjà (dans la table Users)
+            bool emailExists = _context.Users.Any(u => u.Email == dto.Email);
+            if (emailExists)
+            {
+                Console.WriteLine($"Email déjà utilisé: {dto.Email}");
+                return null;
+            }
             client = Client.SignUpDtoToEntity(dto);
             client.Password = PasswordHashing.HashPassword(dto.Password);
             _context.Clients.Add(client);

@@ -37,7 +37,11 @@ public class SellerController : ControllerBase
     public IActionResult SignUp(SignUpSellerDto dto)
     {
         SellerDto? sellerDto = _sellerService.SignUp(dto);
-        return CreatedAtAction(nameof(GetSellerById), new { id = sellerDto?.Id }, sellerDto);
+        if (sellerDto == null)
+        {
+            return Conflict(new { message = "Un compte avec cet email existe déjà." });
+        }
+        return CreatedAtAction(nameof(GetSellerById), new { id = sellerDto.Id }, sellerDto);
     }
 
 

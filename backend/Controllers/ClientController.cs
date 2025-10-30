@@ -25,7 +25,11 @@ public class ClientController : ControllerBase
     public IActionResult SignUp(SignUpClientDto dto)
     {
         ClientDto? clientDto = _clientService.SignUp(dto);
-        return CreatedAtAction(nameof(GetClientById), new { id = clientDto?.Id }, clientDto);
+        if (clientDto == null)
+        {
+            return Conflict(new { message = "Un compte avec cet email existe déjà." });
+        }
+        return CreatedAtAction(nameof(GetClientById), new { id = clientDto.Id }, clientDto);
     }
 
 }

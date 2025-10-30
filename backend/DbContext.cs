@@ -10,11 +10,18 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<Client> Clients { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.User)
+            .WithMany()
+            .HasForeignKey(rt => rt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Product>()
             .HasOne(p => p.BoughtByClient)
