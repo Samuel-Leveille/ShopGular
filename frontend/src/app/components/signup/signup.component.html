@@ -2,6 +2,19 @@
   <h2 id="titre">Créer un compte</h2>
 
   <form #signupForm="ngForm" (ngSubmit)="onSignup()" class="signup-form">
+    <div class="info-banner" *ngIf="isGoogleSignup">
+      <p>
+        Vous êtes connecté(e) avec Google.
+        <span *ngIf="!isSeller"
+          >Confirmez les informations importées depuis votre profil.</span
+        >
+        <span *ngIf="isSeller"
+          >Choisissez le nom de votre entreprise pour finaliser votre compte
+          vendeur.</span
+        >
+      </p>
+    </div>
+
     <div class="form-group checkbox-group">
       <label>
         <input
@@ -22,6 +35,7 @@
           placeholder="Entrez votre prénom"
           [(ngModel)]="clientSignup.firstname"
           name="firstname"
+          [readonly]="isGoogleSignup"
         />
       </div>
 
@@ -33,6 +47,7 @@
           placeholder="Entrez votre nom"
           [(ngModel)]="clientSignup.name"
           name="name"
+          [readonly]="isGoogleSignup"
         />
       </div>
       <div class="form-group">
@@ -43,10 +58,11 @@
           placeholder="exemple@email.com"
           [(ngModel)]="clientSignup.email"
           name="email"
+          [readonly]="isGoogleSignup"
         />
       </div>
 
-      <div class="form-group">
+      <div class="form-group" *ngIf="!isGoogleSignup">
         <label for="password">Mot de passe</label>
         <input
           id="password"
@@ -57,7 +73,7 @@
         />
       </div>
 
-      <div class="form-group">
+      <div class="form-group" *ngIf="!isGoogleSignup">
         <label for="confirmPassword">Confirmer le mot de passe</label>
         <input
           id="confirmPassword"
@@ -87,10 +103,11 @@
           placeholder="exemple@email.com"
           [(ngModel)]="sellerSignup.email"
           name="email"
+          [readonly]="isGoogleSignup"
         />
       </div>
 
-      <div class="form-group">
+      <div class="form-group" *ngIf="!isGoogleSignup">
         <label for="password">Mot de passe</label>
         <input
           id="password"
@@ -101,7 +118,7 @@
         />
       </div>
 
-      <div class="form-group">
+      <div class="form-group" *ngIf="!isGoogleSignup">
         <label for="confirmPassword">Confirmer le mot de passe</label>
         <input
           id="confirmPassword"
@@ -113,7 +130,13 @@
       </div>
     </div>
 
-    <button type="submit" class="signup-btn">S'inscrire</button>
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <button type="submit" class="signup-btn" [disabled]="isSubmitting">
+      {{ isSubmitting ? "Traitement..." : "S'inscrire" }}
+    </button>
 
     <div class="login-link">
       <p>Déjà inscrit ?</p>

@@ -47,40 +47,15 @@ public class TokenService
 
     public async Task<(string refreshToken, DateTime refreshExpires)> CreateAndStoreRefreshTokenAsync(long userId)
     {
-        var expired = await _db.Set<RefreshToken>()
-            .Where(r => r.ExpiresAtUtc <= DateTime.UtcNow)
-            .ToListAsync();
-        if (expired.Count > 0)
-        {
-            _db.RemoveRange(expired);
-        }
-
-        var oldTokens = await _db.Set<RefreshToken>()
-            .Where(r => r.UserId == userId)
-            .ToListAsync();
-        if (oldTokens.Count > 0)
-        {
-            _db.RemoveRange(oldTokens);
-        }
-
         var rng = RandomNumberGenerator.Create();
         var bytes = new byte[64];
         rng.GetBytes(bytes);
         var token = Convert.ToBase64String(bytes);
-
         var days = int.Parse(_configuration["Jwt:RefreshTokenDays"]!);
         var expires = DateTime.UtcNow.AddDays(days);
-
-        var entity = new RefreshToken
-        {
-            UserId = userId,
-            Token = token,
-            ExpiresAtUtc = expires
-        };
-
+        var entity = new RefreshToken { UserId = userId, Token = token, ExpiresAtUtc = expires };
         _db.Set<RefreshToken>().Add(entity);
         await _db.SaveChangesAsync();
-
         return (token, expires);
     }
 }
@@ -90,53 +65,23 @@ public class RefreshTokenService
     private readonly AppDbContext _db;
     public RefreshTokenService(AppDbContext db) { _db = db; }
 
-    public async Task DeleteAsync(string token)
-    {
-        var rt = await _db.Set<RefreshToken>().FirstOrDefaultAsync(r => r.Token == token);
-        if (rt != null)
-        {
-            _db.Remove(rt);
-            await _db.SaveChangesAsync();
-        }
-    }
-
-    public async Task DeleteAllForUserAsync(long userId)
-    {
-        var tokens = await _db.Set<RefreshToken>()
-            .Where(r => r.UserId == userId)
-            .ToListAsync();
-
-        if (tokens.Count > 0)
-        {
-            _db.RemoveRange(tokens);
-            await _db.SaveChangesAsync();
-        }
-    }
-
-    public async Task DeleteExpiredAsync()
-    {
-        var expired = await _db.Set<RefreshToken>()
-            .Where(r => r.ExpiresAtUtc <= DateTime.UtcNow)
-            .ToListAsync();
-
-        if (expired.Count > 0)
-        {
-            _db.RemoveRange(expired);
-            await _db.SaveChangesAsync();
-        }
-    }
-
     public async Task<RefreshToken?> GetValidAsync(string token)
     {
         var rt = await _db.Set<RefreshToken>().FirstOrDefaultAsync(r => r.Token == token);
         if (rt == null) return null;
-        if (rt.ExpiresAtUtc <= DateTime.UtcNow)
-        {
-            _db.Remove(rt);
-            await _db.SaveChangesAsync();
-            return null;
-        }
+        if (rt.RevokedAtUtc != null) return null;
+        if (rt.ExpiresAtUtc <= DateTime.UtcNow) return null;
         return rt;
+    }
+
+    public async Task RevokeAsync(string token)
+    {
+        var rt = await _db.Set<RefreshToken>().FirstOrDefaultAsync(r => r.Token == token);
+        if (rt != null)
+        {
+            rt.RevokedAtUtc = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+        }
     }
 }
 

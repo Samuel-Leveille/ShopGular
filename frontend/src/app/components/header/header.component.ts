@@ -37,6 +37,7 @@ export class HeaderComponent implements OnInit {
       }
       this.updateMenu();
     });
+    // Hydrate from access token on refresh
     if (this.auth.getAccessToken()) {
       this.users.getMe().subscribe({
         next: (res) => this.auth.setCurrentUserFromLoginResponse(res),
@@ -49,7 +50,6 @@ export class HeaderComponent implements OnInit {
 
   updateMenu() {
     const isLoggedIn = !!this.auth.getAccessToken();
-  
     this.items = [
       { label: 'Menu', icon: 'home', link: '' },
       { label: 'Mon Panier', icon: 'shopping_cart' },
@@ -63,23 +63,19 @@ export class HeaderComponent implements OnInit {
 
   onLogout() {
     const rt = this.auth.getRefreshToken();
-  
-    this.auth.clearTokens();
-    this.userName = null;
-    this.firstName = null;
-    this.updateMenu();
-  
-    if (rt) {
-      this.users.logout(rt).subscribe({
-        next: () => {
-          location.href = '/';
-        },
-        error: () => {
-          location.href = '/';
-        }
-      });
-    } else {
-      location.href = '/';
-    }
+    this.users.logout(rt).subscribe({
+      next: () => {
+        this.auth.clearTokens();
+        this.userName = null;
+        this.firstName = null;
+        location.href = '/';
+      },
+      error: () => {
+        this.auth.clearTokens();
+        this.userName = null;
+        this.firstName = null;
+        location.href = '/';
+      }
+    });
   }
 }

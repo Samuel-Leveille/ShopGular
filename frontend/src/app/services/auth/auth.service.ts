@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -9,7 +10,8 @@ export class AuthService {
   private readonly refreshKey = 'sg.refreshToken';
   private readonly userNameKey = 'sg.userName';
   private readonly firstNameKey = 'sg.firstName';
-  private readonly api = 'http://localhost:5227/api/user/';
+  private readonly googlePendingKey = 'sg.googlePendingToken';
+  private readonly api = environment.apiBaseUrl;
 
   private currentUserSubject = new BehaviorSubject<any | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
@@ -70,6 +72,45 @@ export class AuthService {
   refresh() {
     const rt = this.getRefreshToken();
     return this.http.post<{ accessToken: string, accessTokenExpiresAtUtc: string }>(this.api + 'refresh', { refreshToken: rt });
+  }
+
+  getGoogleClientId(): string {
+    return environment.googleClientId;
+  }
+
+  setGooglePendingToken(token: string) {
+    const storage = this.sessionStorageSafe();
+    storage?.setItem(this.googlePendingKey, token);
+  }
+
+  peekGooglePendingToken(): string | null {
+    const storage = this.sessionStorageSafe();
+    return storage?.getItem(this.googlePendingKey) ?? null;
+  }
+
+  consumeGooglePendingToken(): string | null {
+    const token = this.peekGooglePendingToken();
+    if (token) {
+      const storage = this.sessionStorageSafe();
+      storage?.removeItem(this.googlePendingKey);
+    }
+    return token;
+  }
+
+  clearGooglePendingToken() {
+    const storage = this.sessionStorageSafe();
+    storage?.removeItem(this.googlePendingKey);
+  }
+
+  private sessionStorageSafe(): Storage | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      return window.sessionStorage;
+    } catch {
+      return null;
+    }
   }
 }
 

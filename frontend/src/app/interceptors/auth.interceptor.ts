@@ -5,7 +5,8 @@ import { AuthService } from '../services/auth/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
   const auth = inject(AuthService);
-  const access = auth.getAccessToken();
+  const isGoogleFlow = req.url.includes('/google/oauth') || req.url.includes('/google/complete-signup');
+  const access = isGoogleFlow ? null : auth.getAccessToken();
   let authReq = req;
   if (access) {
     authReq = req.clone({ setHeaders: { Authorization: `Bearer ${access}` } });
@@ -14,6 +15,11 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   return next(authReq).pipe(
     catchError(err => {
       if (err.status === 401) {
+        const refreshToken = auth.getRefreshToken();
+        if (!refreshToken) {
+          return throwError(() => err);
+        }
+
         return auth.refresh().pipe(
           switchMap(r => {
             if (r?.accessToken) {

@@ -1,24 +1,48 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopGular.Backend.Models;
 using ShopGular.Backend.Models.Dtos;
 using ShopGular.Backend.Services;
+using IGoogleLoginCoordinator = ShopGular.Backend.Services.IGoogleLoginCoordinator;
+using IGoogleOAuthService = ShopGular.Backend.Services.IGoogleOAuthService;
+using IGoogleOAuthStateStore = ShopGular.Backend.Services.IGoogleOAuthStateStore;
+using IGooglePendingSignupStore = ShopGular.Backend.Services.IGooglePendingSignupStore;
 using System.Security.Claims;
+using System.Linq;
 
 namespace ShopGular.Backend.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-
     private readonly UserService _userService;
     private readonly TokenService _tokenService;
     private readonly RefreshTokenService _refreshService;
+    private readonly GoogleAuthService _googleAuthService;
+    private readonly IGoogleLoginCoordinator _googleLoginCoordinator;
+    private readonly IGoogleOAuthService _googleOAuthService;
+    private readonly IGoogleOAuthStateStore _googleOAuthStateStore;
+    private readonly IGooglePendingSignupStore _pendingSignupStore;
 
-    public UserController(UserService userService, TokenService tokenService, RefreshTokenService refreshService)
+    public UserController(
+        UserService userService,
+        TokenService tokenService,
+        RefreshTokenService refreshService,
+        GoogleAuthService googleAuthService,
+        IGooglePendingSignupStore pendingSignupStore,
+        IGoogleLoginCoordinator googleLoginCoordinator,
+        IGoogleOAuthService googleOAuthService,
+        IGoogleOAuthStateStore googleOAuthStateStore)
     {
         _userService = userService;
         _tokenService = tokenService;
         _refreshService = refreshService;
+        _googleAuthService = googleAuthService;
+        _pendingSignupStore = pendingSignupStore;
+        _googleLoginCoordinator = googleLoginCoordinator;
+        _googleOAuthService = googleOAuthService;
+        _googleOAuthStateStore = googleOAuthStateStore;
     }
 
     [HttpGet("product/{id}")]
@@ -35,36 +59,115 @@ public class UserController : ControllerBase
         var user = await _userService.LoginEntity(dto);
         if (user == null) return Unauthorized();
 
-        var (access, accessExp) = _tokenService.CreateAccessToken(user);
-        var (refresh, refreshExp) = await _tokenService.CreateAndStoreRefreshTokenAsync(user.Id);
+        var payload = await BuildLoginPayloadAsync(user);
+        return Ok(payload);
+    }
 
-        object typedUserDto;
-        string type;
-        if (user is backend.Models.Client client)
+    [HttpPost("google/login")]
+    public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
         {
-            typedUserDto = backend.Models.Client.ToDto(client);
-            type = "client";
-        }
-        else if (user is backend.Models.Seller seller)
-        {
-            typedUserDto = backend.Models.Seller.ToDto(seller);
-            type = "seller";
-        }
-        else
-        {
-            typedUserDto = Models.User.ToDto(user);
-            type = "user";
+            return BadRequest(new { message = "Le jeton Google est requis." });
         }
 
-        return Ok(new
+        var payload = await _googleAuthService.ValidateIdTokenAsync(request.IdToken, cancellationToken);
+        if (payload is null || string.IsNullOrWhiteSpace(payload?.Email))
         {
-            type,
-            user = typedUserDto,
-            accessToken = access,
-            accessTokenExpiresAtUtc = accessExp,
-            refreshToken = refresh,
-            refreshTokenExpiresAtUtc = refreshExp
-        });
+            return Unauthorized(new { message = "Impossible de valider l'identité Google." });
+        }
+
+        var response = await _googleLoginCoordinator.HandlePayloadAsync(payload);
+        return Ok(response);
+    }
+
+    [HttpPost("google/complete-signup")]
+    public async Task<IActionResult> CompleteGoogleSignup(CompleteGoogleSignupRequest request)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.PendingToken))
+        {
+            return BadRequest(new { message = "Le jeton d'inscription Google est requis." });
+        }
+
+        if (!_pendingSignupStore.TryGet(request.PendingToken, out var pending))
+        {
+            return Unauthorized(new { message = "Le jeton d'inscription Google est invalide ou expiré." });
+        }
+
+        var existingUser = await _userService.GetUserByEmailAsync(pending.Email);
+        if (existingUser != null)
+        {
+            var existingResponse = await BuildLoginPayloadAsync(existingUser);
+            return Ok(existingResponse);
+        }
+
+        var accountType = request.AccountType?.Trim().ToLowerInvariant();
+        User createdUser;
+        switch (accountType)
+        {
+            case "client":
+            case "customer":
+                var (firstName, lastName) = ResolveNames(pending, request.FirstName, request.LastName);
+                createdUser = await _userService.CreateClientFromGoogleAsync(pending.Email, firstName, lastName);
+                break;
+            case "seller":
+                var sellerName = (request.SellerName ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(sellerName))
+                {
+                    return BadRequest(new { message = "Le nom de l'entreprise est requis pour un compte vendeur." });
+                }
+                createdUser = await _userService.CreateSellerFromGoogleAsync(pending.Email, sellerName);
+                break;
+            default:
+                return BadRequest(new { message = "Type de compte invalide. Utilisez 'client' ou 'seller'." });
+        }
+
+        var response = await BuildLoginPayloadAsync(createdUser);
+        _pendingSignupStore.Remove(request.PendingToken);
+        return Ok(response);
+    }
+
+    [HttpGet("google/oauth/start")]
+    public IActionResult StartGoogleOAuth([FromQuery] string? returnUrl)
+    {
+        var url = _googleOAuthService.CreateAuthorizationUrl(returnUrl ?? "/");
+        return Ok(new { authorizationUrl = url });
+    }
+
+    [HttpGet("google/oauth/callback")]
+    public async Task<IActionResult> GoogleOAuthCallback([FromQuery] string? state, [FromQuery] string? code, [FromQuery] string? error, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            return Redirect(_googleOAuthService.CreateErrorRedirect(error!, state));
+        }
+
+        if (string.IsNullOrWhiteSpace(state) || string.IsNullOrWhiteSpace(code))
+        {
+            return Redirect(_googleOAuthService.CreateErrorRedirect("invalid_request", state));
+        }
+
+        try
+        {
+            var outcome = await _googleOAuthService.HandleCallbackAsync(state!, code!, cancellationToken);
+            _googleOAuthStateStore.StoreResult(state!, outcome.Result, outcome.ReturnUrl);
+            return Redirect(_googleOAuthService.CreateSuccessRedirect(state!));
+        }
+        catch (Exception ex)
+        {
+            return Redirect(_googleOAuthService.CreateErrorRedirect("callback_failed", state, ex.Message));
+        }
+    }
+
+    [HttpGet("google/oauth/result/{state}")]
+    public IActionResult GetGoogleOAuthResult(string state)
+    {
+        if (!_googleOAuthStateStore.TryConsumeResult(state, out var stored))
+        {
+            return NotFound(new { message = "Session Google expirée. Veuillez réessayer." });
+        }
+
+        return Ok(new { returnUrl = stored.ReturnUrl, result = stored.Result });
     }
 
     public record RefreshRequest(string RefreshToken);
@@ -73,25 +176,14 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Refresh(RefreshRequest body)
     {
         if (string.IsNullOrWhiteSpace(body.RefreshToken)) return BadRequest();
-
         var rt = await _refreshService.GetValidAsync(body.RefreshToken);
         if (rt == null) return Unauthorized();
 
         var user = await _userService.GetUserById(rt.UserId);
         if (user == null) return Unauthorized();
 
-        await _refreshService.DeleteAllForUserAsync(user.Id);
-
         var (access, accessExp) = _tokenService.CreateAccessToken(user);
-        var (refresh, refreshExp) = await _tokenService.CreateAndStoreRefreshTokenAsync(user.Id);
-
-        return Ok(new
-        {
-            accessToken = access,
-            accessTokenExpiresAtUtc = accessExp,
-            refreshToken = refresh,
-            refreshTokenExpiresAtUtc = refreshExp
-        });
+        return Ok(new { accessToken = access, accessTokenExpiresAtUtc = accessExp });
     }
 
     [Authorize]
@@ -100,11 +192,7 @@ public class UserController : ControllerBase
     {
         if (!string.IsNullOrWhiteSpace(body.RefreshToken))
         {
-            var rt = await _refreshService.GetValidAsync(body.RefreshToken);
-            if (rt != null)
-            {
-                await _refreshService.DeleteAllForUserAsync(rt.UserId);
-            }
+            await _refreshService.RevokeAsync(body.RefreshToken);
         }
         return NoContent();
     }
@@ -119,24 +207,55 @@ public class UserController : ControllerBase
         var user = await _userService.GetUserById(userId);
         if (user == null) return Unauthorized();
 
-        object typedUserDto;
-        string type;
-        if (user is backend.Models.Client client)
+        var (type, dto) = await _userService.MapUserToDtoAsync(user);
+        return Ok(new { type, user = dto });
+    }
+
+    private async Task<GoogleLoginPayloadDto> BuildLoginPayloadAsync(User user)
+    {
+        var (access, accessExp) = _tokenService.CreateAccessToken(user);
+        var (refresh, refreshExp) = await _tokenService.CreateAndStoreRefreshTokenAsync(user.Id);
+        var (type, dto) = await _userService.MapUserToDtoAsync(user);
+
+        return new GoogleLoginPayloadDto(
+            type,
+            dto,
+            access,
+            accessExp,
+            refresh,
+            refreshExp
+        );
+    }
+
+    private static (string firstName, string lastName) ResolveNames(PendingGoogleSignupDto pending, string? requestedFirst, string? requestedLast)
+    {
+        static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        var desiredFirst = Normalize(requestedFirst);
+        var desiredLast = Normalize(requestedLast);
+
+        var fallbackFirst = Normalize(pending.FirstName);
+        var fallbackLast = Normalize(pending.LastName);
+
+        if (!string.IsNullOrWhiteSpace(pending.FullName))
         {
-            typedUserDto = backend.Models.Client.ToDto(client);
-            type = "client";
-        }
-        else if (user is backend.Models.Seller seller)
-        {
-            typedUserDto = backend.Models.Seller.ToDto(seller);
-            type = "seller";
-        }
-        else
-        {
-            typedUserDto = Models.User.ToDto(user);
-            type = "user";
+            var parts = pending.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (fallbackFirst == null && parts.Length > 0)
+            {
+                fallbackFirst = parts[0];
+            }
+            if (fallbackLast == null && parts.Length > 1)
+            {
+                fallbackLast = string.Join(" ", parts.Skip(1));
+            }
         }
 
-        return Ok(new { type, user = typedUserDto });
+        fallbackFirst ??= pending.Email?.Split('@').FirstOrDefault() ?? "Utilisateur";
+        fallbackLast ??= fallbackFirst;
+
+        var firstName = desiredFirst ?? fallbackFirst ?? "Utilisateur";
+        var lastName = desiredLast ?? fallbackLast ?? firstName;
+
+        return (firstName, lastName);
     }
 }

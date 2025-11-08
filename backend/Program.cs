@@ -16,10 +16,18 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SellerService>();
 builder.Services.AddScoped<ClientService>();
+builder.Services.AddSingleton<GoogleAuthService>();
+builder.Services.AddSingleton<IGooglePendingSignupStore, GooglePendingSignupStore>();
+builder.Services.AddSingleton<IGoogleOAuthStateStore, GoogleOAuthStateStore>();
+builder.Services.AddScoped<IGoogleLoginCoordinator, GoogleLoginCoordinator>();
+builder.Services.AddHttpClient<IGoogleOAuthService, GoogleOAuthService>();
+builder.Services.AddMemoryCache();
 
+// Token services (in-memory refresh store for demo)
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<RefreshTokenService>();
 
+// Auth JWT
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var secret = jwtSection["Secret"] ?? string.Empty;
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
@@ -44,12 +52,6 @@ builder.Services
             ValidAudience = jwtSection["Audience"],
             ClockSkew = TimeSpan.Zero
         };
-    })
-    .AddGoogle("Google", options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-        options.CallbackPath = "/api/auth/google-callback";
     });
 
 builder.Services.AddAuthorization();
@@ -63,6 +65,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod());
 });
 
+// Simple global rate limiter
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -70,7 +73,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 1000,
+                PermitLimit = 100,
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0

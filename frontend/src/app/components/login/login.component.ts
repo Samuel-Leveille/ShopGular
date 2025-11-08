@@ -28,4 +28,21 @@ export class LoginComponent {
       this._router.navigate(['/']);
     });
   }
+
+  onLoginWithGoogle() {
+    const returnUrl = this._router.url || '/';
+    this._usersService.startGoogleOAuth(returnUrl).subscribe({
+      next: (res) => {
+        const url = res?.authorizationUrl;
+        if (url) {
+          window.location.href = url;
+        } else {
+          console.error('Réponse inattendue lors de la génération de l’URL Google.', res);
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors du démarrage de l’authentification Google', err);
+      }
+    });
+  }
 }
