@@ -37,7 +37,6 @@ export class HeaderComponent implements OnInit {
       }
       this.updateMenu();
     });
-    // Hydrate from access token on refresh
     if (this.auth.getAccessToken()) {
       this.users.getMe().subscribe({
         next: (res) => this.auth.setCurrentUserFromLoginResponse(res),
@@ -65,35 +64,22 @@ export class HeaderComponent implements OnInit {
   onLogout() {
     const rt = this.auth.getRefreshToken();
   
-    // 1️⃣ On vide immédiatement les tokens et l'état utilisateur
-    this.auth.clearTokens(); // met à jour currentUser$ et localStorage
-    this.userName = null;
-    this.firstName = null;
-    this.updateMenu(); // met à jour le menu pour que Déconnexion → Connexion
-  
-    // 2️⃣ Appel backend pour invalider le refresh token côté serveur
-    if (rt) {
-      this.users.logout(rt).subscribe({
-        next: () => {
-          // tout est déjà nettoyé côté frontend
-          location.href = '/';
-        },
-        error: () => {
-          // même chose si l'API échoue
-          location.href = '/';
-        }
-      });
-    } else {
-      // pas de refresh token → redirection
-      location.href = '/';
-    }
-  }
-  
-  private handleLogout() {
     this.auth.clearTokens();
     this.userName = null;
     this.firstName = null;
     this.updateMenu();
-    location.href = '/';
+  
+    if (rt) {
+      this.users.logout(rt).subscribe({
+        next: () => {
+          location.href = '/';
+        },
+        error: () => {
+          location.href = '/';
+        }
+      });
+    } else {
+      location.href = '/';
+    }
   }
 }

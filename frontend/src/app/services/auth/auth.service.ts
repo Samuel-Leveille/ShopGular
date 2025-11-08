@@ -11,7 +11,6 @@ export class AuthService {
   private readonly firstNameKey = 'sg.firstName';
   private readonly api = 'http://localhost:5227/api/user/';
 
-  // Utilisateur courant (client/seller) pour le header
   private currentUserSubject = new BehaviorSubject<any | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
@@ -39,7 +38,6 @@ export class AuthService {
   }
 
   setCurrentUserFromLoginResponse(res: any) {
-    // res.type: 'client' | 'seller' | 'user'; res.user: ClientDto | SellerDto | UserDto
     this.currentUserSubject.next({ type: res?.type, user: res?.user || null });
     if (res?.type === 'client') {
       this.saveFirstName(res.user?.FirstName || res.user?.firstName || res.user?.firstname);

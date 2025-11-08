@@ -40,14 +40,14 @@ public class UserController : ControllerBase
 
         object typedUserDto;
         string type;
-        if (user is ShopGular.backend.Models.Client client)
+        if (user is backend.Models.Client client)
         {
-            typedUserDto = ShopGular.backend.Models.Client.ToDto(client);
+            typedUserDto = backend.Models.Client.ToDto(client);
             type = "client";
         }
-        else if (user is ShopGular.backend.Models.Seller seller)
+        else if (user is backend.Models.Seller seller)
         {
-            typedUserDto = ShopGular.backend.Models.Seller.ToDto(seller);
+            typedUserDto = backend.Models.Seller.ToDto(seller);
             type = "seller";
         }
         else
@@ -73,14 +73,25 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Refresh(RefreshRequest body)
     {
         if (string.IsNullOrWhiteSpace(body.RefreshToken)) return BadRequest();
+
         var rt = await _refreshService.GetValidAsync(body.RefreshToken);
         if (rt == null) return Unauthorized();
 
         var user = await _userService.GetUserById(rt.UserId);
         if (user == null) return Unauthorized();
 
+        await _refreshService.DeleteAllForUserAsync(user.Id);
+
         var (access, accessExp) = _tokenService.CreateAccessToken(user);
-        return Ok(new { accessToken = access, accessTokenExpiresAtUtc = accessExp });
+        var (refresh, refreshExp) = await _tokenService.CreateAndStoreRefreshTokenAsync(user.Id);
+
+        return Ok(new
+        {
+            accessToken = access,
+            accessTokenExpiresAtUtc = accessExp,
+            refreshToken = refresh,
+            refreshTokenExpiresAtUtc = refreshExp
+        });
     }
 
     [Authorize]
@@ -89,7 +100,11 @@ public class UserController : ControllerBase
     {
         if (!string.IsNullOrWhiteSpace(body.RefreshToken))
         {
-            await _refreshService.RevokeAsync(body.RefreshToken);
+            var rt = await _refreshService.GetValidAsync(body.RefreshToken);
+            if (rt != null)
+            {
+                await _refreshService.DeleteAllForUserAsync(rt.UserId);
+            }
         }
         return NoContent();
     }
@@ -106,14 +121,14 @@ public class UserController : ControllerBase
 
         object typedUserDto;
         string type;
-        if (user is ShopGular.backend.Models.Client client)
+        if (user is backend.Models.Client client)
         {
-            typedUserDto = ShopGular.backend.Models.Client.ToDto(client);
+            typedUserDto = backend.Models.Client.ToDto(client);
             type = "client";
         }
-        else if (user is ShopGular.backend.Models.Seller seller)
+        else if (user is backend.Models.Seller seller)
         {
-            typedUserDto = ShopGular.backend.Models.Seller.ToDto(seller);
+            typedUserDto = backend.Models.Seller.ToDto(seller);
             type = "seller";
         }
         else
