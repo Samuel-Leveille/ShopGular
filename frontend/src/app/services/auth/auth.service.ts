@@ -18,6 +18,10 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
+  getCurrentUserSnapshot(): any | null {
+    return this.currentUserSubject.value;
+  }
+
   saveTokens(accessToken: string, refreshToken: string) {
     localStorage.setItem(this.accessKey, accessToken);
     localStorage.setItem(this.refreshKey, refreshToken);

@@ -1,0 +1,190 @@
+<p-toast></p-toast>
+
+<div class="new-product-page">
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <span class="hero-chip">Espace vendeur</span>
+    <h1>Publiez votre prochain produit</h1>
+    <p>
+      Composez une fiche soignée, définissez votre stock et mettez en lumière ce
+      qui rend votre offre unique.
+    </p>
+    <div class="hero-meta">
+      <span
+        ><strong>{{ products.length }}</strong> produits en vitrine</span
+      >
+      <span>Synchronisé en temps réel avec vos clients</span>
+    </div>
+  </section>
+
+  <div class="content-grid">
+    <div class="form-column">
+      <p-card class="glass-card">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="product-form">
+          <div class="field">
+            <label for="title">Nom du produit</label>
+            <input
+              id="title"
+              type="text"
+              pInputText
+              formControlName="title"
+              placeholder="Ex. Montre connectée"
+            />
+            <small
+              class="error"
+              *ngIf="form.get('title')?.invalid && form.get('title')?.touched"
+            >
+              Le nom est requis (120 caractères max).
+            </small>
+          </div>
+
+          <div class="field">
+            <label for="description">Description détaillée</label>
+            <textarea
+              id="description"
+              rows="5"
+              pInputTextarea
+              formControlName="description"
+              placeholder="Décrivez les avantages et les caractéristiques"
+            ></textarea>
+            <small
+              class="error"
+              *ngIf="
+                form.get('description')?.invalid &&
+                form.get('description')?.touched
+              "
+            >
+              La description est requise (1000 caractères max).
+            </small>
+          </div>
+
+          <div class="double-field">
+            <div class="field">
+              <label for="price">Prix (CAD)</label>
+              <p-inputNumber
+                inputId="price"
+                formControlName="price"
+                mode="currency"
+                currency="CAD"
+                locale="fr-CA"
+                [minFractionDigits]="2"
+              ></p-inputNumber>
+              <small
+                class="error"
+                *ngIf="form.get('price')?.invalid && form.get('price')?.touched"
+              >
+                Indiquez un prix valide.
+              </small>
+            </div>
+            <div class="field">
+              <label for="quantity">Stock disponible</label>
+              <p-inputNumber
+                inputId="quantity"
+                formControlName="quantity"
+                [min]="0"
+              ></p-inputNumber>
+              <small
+                class="error"
+                *ngIf="
+                  form.get('quantity')?.invalid && form.get('quantity')?.touched
+                "
+              >
+                Indiquez une quantité positive.
+              </small>
+            </div>
+          </div>
+
+          <div class="double-field">
+            <div class="field">
+              <label for="category">Catégorie</label>
+              <p-dropdown
+                id="category"
+                [options]="categories"
+                formControlName="category"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Sélectionnez une catégorie"
+              ></p-dropdown>
+              <small
+                class="error"
+                *ngIf="
+                  form.get('category')?.invalid && form.get('category')?.touched
+                "
+              >
+                Choisissez une catégorie.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="tag">Statut de stock</label>
+              <p-dropdown
+                id="tag"
+                [options]="tagOptions"
+                formControlName="tag"
+                optionLabel="label"
+                optionValue="value"
+              ></p-dropdown>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="image">Image (URL)</label>
+            <input
+              id="image"
+              type="text"
+              pInputText
+              formControlName="image"
+              placeholder="https://..."
+            />
+            <small class="hint"
+              >Laissez vide pour utiliser une image par défaut.</small
+            >
+          </div>
+
+          <button pButton type="submit" [loading]="loading" class="cta-button">
+            Publier ce produit
+          </button>
+        </form>
+      </p-card>
+    </div>
+
+    <div class="list-column">
+      <p-card class="glass-card" header="Vos derniers produits">
+        <div *ngIf="products.length === 0" class="empty-state">
+          <span class="material-icons">inventory_2</span>
+          <p>Ajoutez votre premier produit pour le voir apparaître ici.</p>
+        </div>
+        <div class="product-list" *ngIf="products.length > 0">
+          <div class="product-card" *ngFor="let product of products">
+            <div class="product-header">
+              <div>
+                <div class="title">{{ product.title }}</div>
+                <div class="meta">
+                  <span class="price">{{
+                    product.price
+                      | currency : "CAD" : "symbol-narrow" : "1.2-2" : "fr-CA"
+                  }}</span>
+                  <span class="category">{{ product.category }}</span>
+                </div>
+              </div>
+              <p-tag
+                [severity]="severityForTag(product.tag)"
+                [value]="labelForTag(product.tag)"
+              ></p-tag>
+            </div>
+            <p class="description">{{ product.description }}</p>
+            <div class="footer">
+              <span
+                >Stock : <strong>{{ product.quantity }}</strong></span
+              >
+              <span
+                >Créé le :
+                {{ product.dateOfSale | date : "d MMMM y" : "" : "fr" }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>

@@ -17,6 +17,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       if (err.status === 401) {
         const refreshToken = auth.getRefreshToken();
         if (!refreshToken) {
+          auth.clearTokens();
           return throwError(() => err);
         }
 
@@ -27,7 +28,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
               const retried = req.clone({ setHeaders: { Authorization: `Bearer ${r.accessToken}` } });
               return next(retried);
             }
+            auth.clearTokens();
             return throwError(() => err);
+          }),
+          catchError(refreshErr => {
+            auth.clearTokens();
+            return throwError(() => refreshErr);
           })
         );
       }

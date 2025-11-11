@@ -1,2 +1,8 @@
 appsettings*.json
 /frontend/environments/environment.ts
+/backend/bin/
+/backend/obj/
+/frontend/node_modules/
+/frontend/.angular/
+/frontend/dist/
+/frontend/out-tsc/

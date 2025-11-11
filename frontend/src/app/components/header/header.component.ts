@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { RippleModule } from 'primeng/ripple';
 import { AuthService } from '../../services/auth/auth.service';
 import { UsersService } from '../../services/users/users.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-header',
@@ -20,11 +21,13 @@ export class HeaderComponent implements OnInit {
   items: any[] | undefined;
   userName: string | null = null;
   firstName: string | null = null;
+  private userType: string | null = null;
 
   constructor(private auth: AuthService, private users: UsersService) {}
 
   ngOnInit(): void {
     this.auth.currentUser$.subscribe((u) => {
+      this.userType = u?.type ?? null;
       if (u?.type === 'client') {
         this.firstName = u.user?.FirstName || u.user?.firstName || u.user?.firstname || null;
         this.userName = u.user?.Name || u.user?.name || null;
@@ -37,11 +40,16 @@ export class HeaderComponent implements OnInit {
       }
       this.updateMenu();
     });
-    // Hydrate from access token on refresh
+
     if (this.auth.getAccessToken()) {
       this.users.getMe().subscribe({
         next: (res) => this.auth.setCurrentUserFromLoginResponse(res),
-        error: () => this.updateMenu()
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 401) {
+            this.auth.clearTokens();
+          }
+          this.updateMenu();
+        }
       });
     } else {
       this.updateMenu();
@@ -50,14 +58,19 @@ export class HeaderComponent implements OnInit {
 
   updateMenu() {
     const isLoggedIn = !!this.auth.getAccessToken();
+    const current = this.auth.getCurrentUserSnapshot();
+    const isSeller = current?.type === 'seller';
+
     this.items = [
-      { label: 'Menu', icon: 'home', link: '' },
-      { label: 'Mon Panier', icon: 'shopping_cart' },
-      { label: 'Mon profil', icon: 'account_circle' },
-      { label: 'Nous contacter', icon: 'mail' },
+      { label: 'Menu', icon: 'home', routerLink: '/' },
+      isSeller
+        ? { label: 'Nouveau produit', icon: 'add_circle', routerLink: '/seller/new-product' }
+        : { label: 'Mon panier', icon: 'shopping_cart', routerLink: '/' },
+      { label: 'Mon profil', icon: 'account_circle', routerLink: '/' },
+      { label: 'Nous contacter', icon: 'mail', routerLink: '/' },
       ...(isLoggedIn
         ? [{ label: 'Déconnexion', icon: 'logout', command: () => this.onLogout() }]
-        : [{ label: 'Connexion', icon: 'login', link: 'login' }])
+        : [{ label: 'Connexion', icon: 'login', routerLink: '/login' }])
     ];
   }
 

@@ -1,10 +1,13 @@
+using Microsoft.EntityFrameworkCore;
 using ShopGular.backend.Models;
 using ShopGular.Backend.Models;
 using ShopGular.Backend.Models.Dtos;
+using System.Linq;
+
 namespace ShopGular.Backend.Services;
+
 public class SellerService
 {
-
     private readonly AppDbContext _context;
 
     public SellerService(AppDbContext context)
@@ -12,62 +15,49 @@ public class SellerService
         _context = context;
     }
 
-    public SellerDto? GetSellerById(long id)
+    public async Task<SellerDto?> GetSellerByIdAsync(long id)
     {
-        Seller? seller = null;
-        try
-        {
-            seller = _context.Sellers.Find(id);
-            if (seller == null)
-            {
-                Console.WriteLine($"User seller avec id {id} introuvable");
-                return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de l'obtention d'un utilisateur seller par son id : {ex.Message}");
-        }
+        var seller = await _context.Sellers.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
         return seller != null ? Seller.ToDto(seller) : null;
     }
 
-    public ProductDto? AddProduct(CreateProductDto product)
+    public async Task<ProductDto?> AddProductAsync(long sellerId, CreateProductDto dto)
     {
-        Product? entity = null;
-        try
+        var sellerExists = await _context.Sellers.AnyAsync(s => s.Id == sellerId);
+        if (!sellerExists)
         {
-            entity = Product.ToEntityNewProduct(product);
-            _context.Products.Add(entity);
-            _context.SaveChanges();
+            return null;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la tentative d'ajout d'un nouveau produit : {ex.Message}");
-        }
-        return entity != null ? Product.ToDto(entity) : null;
+
+        var entity = Product.ToEntityNewProduct(dto, sellerId);
+        _context.Products.Add(entity);
+        await _context.SaveChangesAsync();
+        return Product.ToDto(entity);
     }
 
-    public SellerDto? SignUp(SignUpSellerDto dto)
+    public async Task<IReadOnlyList<ProductDto>> GetProductsForSellerAsync(long sellerId)
     {
-        Seller? seller = null;
-        try
+        var products = await _context.Products
+            .AsNoTracking()
+            .Where(p => p.SellerId == sellerId)
+            .OrderByDescending(p => p.DateOfSale)
+            .ToListAsync();
+
+        return products.Select(Product.ToDto).ToList();
+    }
+
+    public async Task<SellerDto?> SignUpAsync(SignUpSellerDto dto)
+    {
+        var emailExists = await _context.Users.AnyAsync(u => u.Email == dto.Email);
+        if (emailExists)
         {
-            // Vérifie si l'email existe déjà (dans la table Users)
-            bool emailExists = _context.Users.Any(u => u.Email == dto.Email);
-            if (emailExists)
-            {
-                Console.WriteLine($"Email déjà utilisé: {dto.Email}");
-                return null;
-            }
-            seller = Seller.SignUpDtoToEntity(dto);
-            seller.Password = PasswordHashing.HashPassword(dto.Password);
-            _context.Sellers.Add(seller);
-            _context.SaveChanges();
+            return null;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la tentative d'ajout d'un nouvel utilisateur seller : {ex.Message}");
-        }
-        return seller != null ? Seller.ToDto(seller) : null;
+
+        var seller = Seller.SignUpDtoToEntity(dto);
+        seller.Password = PasswordHashing.HashPassword(dto.Password);
+        _context.Sellers.Add(seller);
+        await _context.SaveChangesAsync();
+        return Seller.ToDto(seller);
     }
 }

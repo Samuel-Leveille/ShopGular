@@ -24,6 +24,8 @@
         id="headerItems"
         *ngIf="item"
         [href]="item.link"
+        [routerLink]="item.routerLink"
+        (click)="item.command ? item.command($event) : null"
       >
         <span class="material-icons">{{ item.icon }}</span>
         <span class="ml-2">{{ item.label }}</span>

@@ -27,12 +27,18 @@ public class AppDbContext : DbContext
             .HasOne(p => p.BoughtByClient)
             .WithMany(c => c.ProductsBought)
             .HasForeignKey(p => p.BoughtByClientFK)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Product>()
             .HasOne(p => p.InShoppingCartByClient)
             .WithMany(c => c.ProductsInShoppingCart)
             .HasForeignKey(p => p.InShoppingCartByClientFK)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.Seller)
+            .WithMany(s => s.ProductsForSale)
+            .HasForeignKey(p => p.SellerId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
