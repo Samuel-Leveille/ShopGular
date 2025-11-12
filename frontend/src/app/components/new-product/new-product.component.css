@@ -12,7 +12,6 @@
   color: #111827;
 }
 
-/* ----- HERO SECTION ----- */
 .hero {
   position: relative;
   border-radius: 28px;
@@ -23,8 +22,8 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 24px;
-  max-width: 980px;
-  width: min(92%, 980px);
+  max-width: 1170px;
+  width: min(92%, 1170px);
   backdrop-filter: blur(20px);
 }
 
@@ -65,19 +64,17 @@
   box-shadow: 0 3px 8px rgba(155, 42, 110, 0.3);
 }
 
-/* ----- GRID LAYOUT ----- */
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: 40px;
   align-items: start;
-  max-width: 1120px;
-  width: min(95%, 1120px);
+  max-width: 1220px;
+  width: min(96%, 1220px);
   padding: 0 24px;
   box-sizing: border-box;
 }
 
-/* ----- CARDS ----- */
 .glass-card ::ng-deep .p-card {
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.9);
@@ -92,6 +89,10 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
 }
 
+#productsList ::ng-deep .p-card {
+  padding: 20px;
+}
+
 .glass-card ::ng-deep .p-card-header {
   font-size: 1.3rem;
   font-weight: 600;
@@ -101,37 +102,37 @@
   color: #9b2a6e;
 }
 
-/* ----- FORMULAIRE PRODUIT ----- */
 .product-form {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: 8px 6px 16px;
-  background: rgba(255, 255, 255, 0.65);
+  gap: 20px; /* moins d’espace vertical */
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 20px;
-  padding: 32px;
+  padding: 24px 28px; /* un peu moins haut */
   backdrop-filter: blur(6px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  max-width: 700px; /* plus large */
+  width: 100%;
+  margin: 0 auto;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .double-field {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  gap: 20px;
 }
 
 .field label {
   font-weight: 600;
   color: #374151;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
+  font-size: 0.9rem;
 }
 
 .field input,
@@ -139,10 +140,10 @@
 ::ng-deep .p-inputnumber input,
 ::ng-deep .p-dropdown {
   width: 100%;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #d1d5db;
-  padding: 12px 14px;
-  font-size: 1rem;
+  padding: 10px 12px;
+  font-size: 0.95rem;
   background: #fff;
   transition: all 0.25s ease;
 }
@@ -162,20 +163,19 @@
   margin-top: 2px;
 }
 
-/* ----- CTA BUTTON ----- */
 .cta-button {
-  width: 60%;
+  width: 50%;
   border: none;
   background: linear-gradient(90deg, #9b2a6e 0%, #cc2b30 50%, #eddd53 100%) !important;
   border-radius: 999px !important;
-  padding: 16px 26px !important;
-  font-size: 1.1rem !important;
+  padding: 14px 20px !important;
+  font-size: 1rem !important;
   font-weight: 600 !important;
   color: #fff !important;
-  box-shadow: 0 16px 40px rgba(155, 42, 110, 0.25);
+  box-shadow: 0 14px 36px rgba(155, 42, 110, 0.25);
   transition: all 0.25s ease;
   align-self: center;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .cta-button:hover {
@@ -184,15 +184,14 @@
   filter: brightness(1.05);
 }
 
-/* ----- PRODUIT LISTE ----- */
 .product-card {
   border-radius: 20px;
-  padding: 24px;
+  padding: 20px;
   background-color: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transition: all 0.25s ease;
 }
 
@@ -202,19 +201,79 @@
   border-color: rgba(155, 42, 110, 0.2);
 }
 
-/* ----- RESPONSIVE ----- */
+::ng-deep .p-dropdown-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(155, 42, 110, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  padding: 6px 0;
+  animation: dropdownFade 0.15s ease;
+  z-index: 9999 !important;
+}
+
+/* Liste interne */
+::ng-deep .p-dropdown-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Chaque option */
+::ng-deep .p-dropdown-item {
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  border-radius: 8px;
+  margin: 2px 6px;
+}
+
+/* Hover */
+::ng-deep .p-dropdown-item:hover {
+  background: rgba(155, 42, 110, 0.1);
+  color: #9b2a6e;
+}
+
+/* Option sélectionnée */
+::ng-deep .p-dropdown-item.p-highlight {
+  background: linear-gradient(90deg, #9b2a6e, #cc2b30);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Séparateur (si utilisé) */
+::ng-deep .p-dropdown-item-group {
+  font-weight: 700;
+  padding: 8px 16px 4px;
+  color: #9b2a6e;
+}
+
+/* Petite animation d’apparition */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 1024px) {
   .content-grid {
     grid-template-columns: 1fr;
-    max-width: 680px;
+    max-width: 760px;
   }
 
-  .hero {
-    padding: 48px 40px;
+  .product-form {
+    max-width: 600px;
   }
 
   .cta-button {
-    width: 80%;
+    width: 70%;
   }
 }
 
@@ -233,7 +292,12 @@
 
   .double-field {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 16px;
+  }
+
+  .product-form {
+    max-width: 100%;
+    padding: 20px;
   }
 
   .cta-button {

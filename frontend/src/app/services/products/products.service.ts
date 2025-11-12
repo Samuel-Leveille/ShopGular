@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Product } from '../../model/productInterface';
 import { environment } from '../../../environments/environment';
-import { CreateProductPayload } from '../../model/create-product-payload';
 import { Observable } from 'rxjs';
 import { ProductSummary } from '../../model/product-summary';
 
@@ -19,8 +18,8 @@ export class ProductsService {
     return this.http.get<Product[]>('https://fakestoreapi.com/products');
   }
 
-  createSellerProduct(payload: CreateProductPayload): Observable<ProductSummary> {
-    return this.http.post<ProductSummary>(`${this.api}seller/products`, payload);
+  createSellerProduct(formData: FormData): Observable<ProductSummary> {
+    return this.http.post<ProductSummary>(`${this.api}seller/products`, formData);
   }
 
   getSellerProducts(): Observable<ProductSummary[]> {

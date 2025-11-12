@@ -85,6 +85,8 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
 app.UseCors("AllowLocalhost");
 
 app.UseRateLimiter();

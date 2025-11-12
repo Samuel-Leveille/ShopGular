@@ -1,6 +1,11 @@
+using System.Globalization;
+using System.IO;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShopGular.Backend.Enums;
 using ShopGular.Backend.Models.Dtos;
 using ShopGular.Backend.Services;
 
@@ -12,16 +17,18 @@ public class SellerController : ControllerBase
 {
     private readonly SellerService _sellerService;
     private readonly UserService _userService;
+    private readonly IWebHostEnvironment _environment;
 
-    public SellerController(SellerService sellerService, UserService userService)
+    public SellerController(SellerService sellerService, UserService userService, IWebHostEnvironment environment)
     {
         _sellerService = sellerService;
         _userService = userService;
+        _environment = environment;
     }
 
     [Authorize]
     [HttpPost("products")]
-    public async Task<IActionResult> AddProduct(CreateProductDto product)
+    public async Task<IActionResult> AddProduct([FromForm] CreateProductRequest request)
     {
         if (!TryGetUserId(out var userId))
         {
@@ -34,13 +41,71 @@ public class SellerController : ControllerBase
             return Forbid();
         }
 
-        var productDto = await _sellerService.AddProductAsync(seller.Id, product);
+        if (string.IsNullOrWhiteSpace(request.Title) ||
+            string.IsNullOrWhiteSpace(request.Description) ||
+            string.IsNullOrWhiteSpace(request.Category) ||
+            string.IsNullOrWhiteSpace(request.Price) ||
+            string.IsNullOrWhiteSpace(request.Quantity) ||
+            request.ImageFile == null || request.ImageFile.Length == 0)
+        {
+            return BadRequest(new { message = "Les informations du produit sont incomplètes." });
+        }
+
+        if (!double.TryParse(request.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedPrice) ||
+            parsedPrice <= 0 ||
+            !int.TryParse(request.Quantity, out var parsedQuantity) ||
+            parsedQuantity < 0)
+        {
+            return BadRequest(new { message = "Le prix ou la quantité est invalide." });
+        }
+
+        var imagePath = await SaveImageAsync(request.ImageFile);
+
+        var dto = new CreateProductDto(
+            request.Title,
+            request.Description,
+            parsedPrice,
+            request.Category,
+            imagePath,
+            parsedQuantity,
+            ParseNullableInt(request.PurchaseQuantity),
+            ParseTag(request.Tag),
+            ParseDate(request.DateOfSale));
+
+        var productDto = await _sellerService.AddProductAsync(seller.Id, dto);
         if (productDto == null)
         {
             return BadRequest(new { message = "Impossible de créer le produit." });
         }
 
         return Ok(productDto);
+    }
+    private static int? ParseNullableInt(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return int.TryParse(value, out var result) ? result : null;
+    }
+
+    private static ProductTag ParseTag(string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && Enum.TryParse<ProductTag>(value, out var tag))
+        {
+            return tag;
+        }
+        return ProductTag.InStock;
+    }
+
+    private static DateTime ParseDate(string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value) &&
+            DateTime.TryParse(value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
+                out var date))
+        {
+            return DateTime.SpecifyKind(date, DateTimeKind.Utc);
+        }
+        return DateTime.UtcNow;
     }
 
     [Authorize]
@@ -91,5 +156,32 @@ public class SellerController : ControllerBase
         userId = 0;
         var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
         return long.TryParse(sub, out userId);
+    }
+
+    private async Task<string?> SaveImageAsync(IFormFile? file)
+    {
+        if (file == null || file.Length == 0) return null;
+
+        var webRoot = string.IsNullOrWhiteSpace(_environment.WebRootPath)
+            ? Path.Combine(_environment.ContentRootPath, "wwwroot")
+            : _environment.WebRootPath!;
+
+        var uploadFolder = Path.Combine(webRoot, "uploads", "products");
+        Directory.CreateDirectory(uploadFolder);
+
+        var extension = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            extension = ".png";
+        }
+
+        var fileName = $"{Guid.NewGuid()}{extension}";
+        var filePath = Path.Combine(uploadFolder, fileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        var relativePath = $"/uploads/products/{fileName}";
+        return relativePath;
     }
 }

@@ -160,3 +160,4 @@ C:\Users\samle\projets\ShopGular\ShopGular\backend\obj\Debug\net8.0\refint\backe
 C:\Users\samle\projets\ShopGular\ShopGular\backend\obj\Debug\net8.0\backend.pdb
 C:\Users\samle\projets\ShopGular\ShopGular\backend\obj\Debug\net8.0\backend.genruntimeconfig.cache
 C:\Users\samle\projets\ShopGular\ShopGular\backend\obj\Debug\net8.0\ref\backend.dll
+C:\Users\samle\projets\ShopGular\ShopGular\backend\bin\Debug\net8.0\backend.staticwebassets.runtime.json

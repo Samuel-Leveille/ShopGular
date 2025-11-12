@@ -128,16 +128,22 @@
           </div>
 
           <div class="field">
-            <label for="image">Image (URL)</label>
+            <label for="image">Visuel du produit</label>
             <input
+              #fileInput
               id="image"
-              type="text"
-              pInputText
-              formControlName="image"
-              placeholder="https://..."
+              type="file"
+              accept="image/*"
+              (change)="onImageSelected($event)"
             />
+            <small
+              class="error"
+              *ngIf="form.get('image')?.invalid && form.get('image')?.touched"
+            >
+              Importez une image au format PNG, JPG ou WebP.
+            </small>
             <small class="hint"
-              >Laissez vide pour utiliser une image par défaut.</small
+              >Formats recommandés : 1200x800px minimum, PNG ou JPG.</small
             >
           </div>
 
@@ -149,13 +155,20 @@
     </div>
 
     <div class="list-column">
-      <p-card class="glass-card" header="Vos derniers produits">
+      <p-card
+        class="glass-card"
+        header="Vos derniers produits"
+        id="productsList"
+      >
         <div *ngIf="products.length === 0" class="empty-state">
           <span class="material-icons">inventory_2</span>
           <p>Ajoutez votre premier produit pour le voir apparaître ici.</p>
         </div>
         <div class="product-list" *ngIf="products.length > 0">
-          <div class="product-card" *ngFor="let product of products">
+          <div
+            class="product-card"
+            *ngFor="let product of products; trackBy: trackByProductId"
+          >
             <div class="product-header">
               <div>
                 <div class="title">{{ product.title }}</div>
@@ -168,8 +181,8 @@
                 </div>
               </div>
               <p-tag
-                [severity]="severityForTag(product.tag)"
-                [value]="labelForTag(product.tag)"
+                [severity]="product.tagSeverity"
+                [value]="product.tagLabel"
               ></p-tag>
             </div>
             <p class="description">{{ product.description }}</p>
