@@ -60,4 +60,26 @@ public class SellerService
         await _context.SaveChangesAsync();
         return Seller.ToDto(seller);
     }
+
+    public async Task<ProductDto?> UpdateProductAsync(long sellerId, long productId, UpdateProductDto dto)
+    {
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && p.SellerId == sellerId);
+        if (product == null)
+        {
+            return null;
+        }
+
+        product.Title = dto.Title;
+        product.Description = dto.Description;
+        product.Quantity = dto.Quantity;
+
+        if (!string.IsNullOrWhiteSpace(dto.ImagePath))
+        {
+            product.Image = dto.ImagePath!;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Product.ToDto(product);
+    }
 }

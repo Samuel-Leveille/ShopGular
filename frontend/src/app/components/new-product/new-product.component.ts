@@ -13,9 +13,8 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../../services/auth/auth.service';
 import { ProductsService } from '../../services/products/products.service';
-import { PRODUCT_TAG_OPTIONS, TagSeverity, ProductTagOption } from '../../model/product-tag-options';
+import { PRODUCT_TAG_OPTIONS } from '../../model/product-tag-options';
 import { ProductSummary } from '../../model/product-summary';
-import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-new-product',
@@ -42,7 +41,6 @@ export class NewProductComponent implements OnInit {
   loading = false;
   products: ProductSummary[] = [];
   readonly tagOptions = PRODUCT_TAG_OPTIONS;
-  private readonly backendOrigin = new URL(environment.apiBaseUrl).origin;
   readonly categories = [
     { label: 'Technologie', value: 'Technologie' },
     { label: 'Mode', value: 'Mode' },
@@ -199,10 +197,7 @@ export class NewProductComponent implements OnInit {
     this.productsService.getSellerProducts().subscribe({
       next: (items) => {
         this.zone.run(() => {
-          this.products = items.map(item => ({
-            ...this.toSummary(item),
-            tag: Number(item.tag)
-          }));
+          this.products = items;
           this.cdr.detectChanges();
         });
       }
@@ -210,83 +205,13 @@ export class NewProductComponent implements OnInit {
   }
 
   private appendProduct(raw: any): void {
-    const summary = this.toSummary(raw);
+    const summary = this.productsService.normalizeProduct(raw);
     this.products = [summary, ...this.products.filter(p => p.id !== summary.id)];
     this.cdr.detectChanges();
   }
 
-  private toSummary(raw: any): ProductSummary {
-    const tag = this.toNumber(raw?.tag ?? raw?.Tag);
-    const tagMeta = this.resolveTagMeta(tag);
-    console.log(raw);
-    return {
-      id: this.toNumber(raw?.id ?? raw?.Id),
-      title: this.toString(raw?.title ?? raw?.Title),
-      description: this.toString(raw?.description ?? raw?.Description),
-      price: this.toNumber(raw?.price ?? raw?.Price),
-      category: this.toString(raw?.category ?? raw?.Category),
-      image: this.resolveImage(raw?.image ?? raw?.Image),
-      quantity: this.toNumber(raw?.quantity ?? raw?.Quantity),
-      purchaseQuantity: this.toNumber(raw?.purchaseQuantity ?? raw?.PurchaseQuantity),
-      tag: tag,
-      tagLabel: tagMeta.label,
-      tagSeverity: tagMeta.severity,
-      dateOfSale: this.toIsoDate(raw?.dateOfSale ?? raw?.DateOfSale),
-      sellerId: this.toNumber(raw?.sellerId ?? raw?.SellerId)
-    };
-  }
-
   trackByProductId(_: number, item: ProductSummary): number {
     return item.id;
-  }
-
-  private resolveTagMeta(value: number): { label: string; severity: TagSeverity } {
-    const option: ProductTagOption | undefined = this.tagOptions.find(opt => opt.value === value);
-    if (option) {
-      return { label: option.label, severity: option.severity };
-    }
-    return { label: 'N/A', severity: 'info' };
-  }
-
-  private toNumber(value: any, fallback = 0): number {
-    const numeric = typeof value === 'number' ? value : Number(value);
-    return Number.isFinite(numeric) ? numeric : fallback;
-  }
-
-  private toString(value: any, fallback = ''): string {
-    if (value == null) return fallback;
-    return String(value);
-  }
-
-  private toIsoDate(value: any): string {
-    if (!value) {
-      return '';
-    }
-    const date = value instanceof Date
-      ? value
-      : typeof value === 'string'
-        ? new Date(value)
-        : new Date(Number(value));
-
-    if (Number.isNaN(date.getTime())) {
-      return '';
-    }
-
-    return date.toISOString();
-  }
-
-  private resolveImage(value: any): string {
-    const str = this.toString(value);
-    if (!str) {
-      return '';
-    }
-    if (/^https?:\/\//i.test(str)) {
-      return str;
-    }
-    if (str.startsWith('/')) {
-      return `${this.backendOrigin}${str}`;
-    }
-    return `${this.backendOrigin}/${str}`;
   }
 }
 

@@ -60,18 +60,21 @@ export class HeaderComponent implements OnInit {
     const isLoggedIn = !!this.auth.getAccessToken();
     const current = this.auth.getCurrentUserSnapshot();
     const isSeller = current?.type === 'seller';
+    const isClient = current?.type === 'client';
 
     this.items = [
       { label: 'Menu', icon: 'home', routerLink: '/' },
       isSeller
         ? { label: 'Nouveau produit', icon: 'add_circle', routerLink: '/seller/new-product' }
-        : { label: 'Mon panier', icon: 'shopping_cart', routerLink: '/' },
+        : isClient
+          ? { label: 'Mon panier', icon: 'shopping_cart', routerLink: '/cart' }
+          : null,
       { label: 'Mon profil', icon: 'account_circle', routerLink: '/' },
       { label: 'Nous contacter', icon: 'mail', routerLink: '/' },
       ...(isLoggedIn
         ? [{ label: 'Déconnexion', icon: 'logout', command: () => this.onLogout() }]
         : [{ label: 'Connexion', icon: 'login', routerLink: '/login' }])
-    ];
+    ].filter(Boolean);
   }
 
   onLogout() {

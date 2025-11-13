@@ -1,0 +1,108 @@
+<p-toast></p-toast>
+
+<section class="cart-container" *ngIf="isClient; else notClient">
+  <header class="cart-header">
+    <h1>Votre panier</h1>
+    <p *ngIf="items.length > 0">
+      {{ items.length }} produit{{ items.length > 1 ? 's' : '' }} dans votre panier.
+    </p>
+    <p *ngIf="items.length === 0">
+      Votre panier est vide. Commencez vos achats pour le remplir !
+    </p>
+  </header>
+
+  <div class="cart-grid" *ngIf="items.length > 0; else emptyCart">
+    <ul class="cart-list">
+      <li class="cart-item" *ngFor="let item of items">
+        <div class="thumbnail">
+          <img *ngIf="item.image; else placeholder" [src]="item.image" [alt]="item.title" />
+          <ng-template #placeholder>
+            <div class="placeholder">ShopGular</div>
+          </ng-template>
+        </div>
+
+        <div class="details">
+          <h2>{{ item.title }}</h2>
+          <p class="price">{{ item.price | currency: 'CAD' : 'symbol': '1.0-0' }}</p>
+          <p class="stock">Stock restant : {{ item.stock }}</p>
+
+          <div class="quantity">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-minus"
+              class="p-button-rounded p-button-text"
+              (click)="decrease(item)"
+            ></button>
+            <span>{{ item.quantity }}</span>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-plus"
+              class="p-button-rounded p-button-text"
+              (click)="increase(item)"
+            ></button>
+          </div>
+        </div>
+
+        <div class="line-total">
+          <span>{{ (item.price * item.quantity) | currency: 'CAD' : 'symbol': '1.0-0' }}</span>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-times"
+            class="p-button-rounded p-button-text remove"
+            (click)="remove(item)"
+            aria-label="Retirer le produit"
+          ></button>
+        </div>
+      </li>
+    </ul>
+
+    <aside class="summary">
+      <h2>Total de la commande</h2>
+      <div class="total">
+        {{ total | currency: 'CAD' : 'symbol': '1.0-0' }}
+      </div>
+      <p class="hint">
+        Les taxes et frais de livraison seront calculés lors du passage à la caisse.
+      </p>
+      <button
+        pButton
+        type="button"
+        label="Continuer mes achats"
+        class="p-button-outlined"
+        (click)="goToHome()"
+      ></button>
+    </aside>
+  </div>
+</section>
+
+<ng-template #emptyCart>
+  <div class="empty-state">
+    <div class="icon">🛍️</div>
+    <p>Votre panier est vide pour le moment.</p>
+    <button
+      pButton
+      type="button"
+      label="Explorer les produits"
+      (click)="goToHome()"
+    ></button>
+  </div>
+</ng-template>
+
+<ng-template #notClient>
+  <section class="cart-container">
+    <div class="restricted">
+      <h2>Panier réservé aux clients</h2>
+      <p>Connectez-vous avec un compte client pour visualiser ou gérer votre panier.</p>
+      <button
+        pButton
+        type="button"
+        label="Retour à l'accueil"
+        (click)="goToHome()"
+      ></button>
+    </div>
+  </section>
+</ng-template>
+

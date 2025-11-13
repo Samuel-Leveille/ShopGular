@@ -77,4 +77,22 @@ public class Product
             product.DateOfSale,
             product.SellerId);
     }
+
+    public static ProductDetailDto ToDetailDto(Product product)
+    {
+        return new ProductDetailDto(
+            product.Id,
+            product.Title,
+            product.Description,
+            product.Price,
+            product.Category,
+            product.Image,
+            product.Quantity,
+            product.PurchaseQuantity,
+            product.Tag,
+            product.DateOfSale,
+            product.SellerId,
+            product.Seller?.Name ?? string.Empty,
+            product.Seller?.Email ?? string.Empty);
+    }
 }

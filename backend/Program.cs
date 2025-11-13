@@ -16,6 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<SellerService>();
 builder.Services.AddScoped<ClientService>();
+builder.Services.AddScoped<ProductCatalogService>();
 builder.Services.AddSingleton<GoogleAuthService>();
 builder.Services.AddSingleton<IGooglePendingSignupStore, GooglePendingSignupStore>();
 builder.Services.AddSingleton<IGoogleOAuthStateStore, GoogleOAuthStateStore>();

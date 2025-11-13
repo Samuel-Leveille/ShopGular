@@ -13,19 +13,55 @@
     id="carousel"
   >
     <ng-template let-product pTemplate="item">
-      <div class="border-1 surface-border border-round m-2 p-3">
-        <div class="mb-3">
-          <div class="relative mx-auto">
-            <img
-              [src]="product.image"
-              [alt]="product.title"
-              width="180"
-              id="item-image"
-            />
-            <h2>{{ product.title }}</h2>
-            <p>{{ product.price | currency }}</p>
-          </div>
-        </div>
+      <div
+        class="product-card"
+        role="button"
+        tabindex="0"
+        (click)="openProduct(product.id ?? product.Id)"
+        (keydown.enter)="openProduct(product.id ?? product.Id)"
+        (keydown.space)="
+          openProduct(product.id ?? product.Id); $event.preventDefault()
+        "
+      >
+        <img [src]="product.image" [alt]="product.title" id="item-image" />
+        <h2>{{ product.title }}</h2>
+        <p>{{ product.price | currency }}</p>
+      </div>
+    </ng-template>
+  </p-carousel>
+</div>
+
+<div
+  class="category-carousel-base"
+  *ngFor="let block of categoryBlocks; trackBy: trackCategory"
+>
+  <div class="category-titre-div">
+    <h2 class="category-titre">{{ block.category }}</h2>
+  </div>
+  <p-carousel
+    class="category-carousel"
+    [value]="block.products"
+    [numVisible]="3"
+    [numScroll]="3"
+    [circular]="false"
+    [autoplayInterval]="0"
+    [responsiveOptions]="categoryResponsive"
+    [showIndicators]="false"
+  >
+    <ng-template let-product pTemplate="item">
+      <div
+        class="product-card"
+        role="button"
+        tabindex="0"
+        (click)="openProduct(product.id ?? product.Id)"
+        (keydown.enter)="openProduct(product.id ?? product.Id)"
+        (keydown.space)="
+          openProduct(product.id ?? product.Id); $event.preventDefault()
+        "
+      >
+        <img [src]="product.image" [alt]="product.title" id="item-image" />
+        <h2>{{ product.title }}</h2>
+        <p>{{ product.price | currency }}</p>
       </div>
     </ng-template>
   </p-carousel>

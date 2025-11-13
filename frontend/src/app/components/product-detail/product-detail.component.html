@@ -1,0 +1,110 @@
+<p-toast></p-toast>
+
+<section class="detail-container" *ngIf="!loading && product; else loadingTemplate">
+  <div class="detail-grid">
+    <div class="image-wrapper">
+      <img
+        *ngIf="product.image; else placeholderImage"
+        [src]="product.image"
+        [alt]="product.title"
+      />
+      <ng-template #placeholderImage>
+        <div class="placeholder-image">ShopGular</div>
+      </ng-template>
+    </div>
+
+    <div class="info-wrapper">
+      <span class="category">{{ product.category }}</span>
+      <h1>{{ product.title }}</h1>
+      <p class="seller">Vendu par {{ product.sellerName }}</p>
+      <p class="description">
+        {{ product.description }}
+      </p>
+
+      <div class="meta">
+        <p-tag
+          [value]="product.tagLabel"
+          [severity]="product.tagSeverity"
+        ></p-tag>
+        <span class="stock">Stock disponible : {{ product.quantity }}</span>
+      </div>
+
+      <div class="actions">
+        <button
+          pButton
+          type="button"
+          label="Ajouter au panier"
+          icon="pi pi-shopping-cart"
+          *ngIf="isClient"
+          (click)="addToCart()"
+        ></button>
+
+        <button
+          pButton
+          type="button"
+          label="Modifier le produit"
+          icon="pi pi-pencil"
+          class="p-button-outlined"
+          *ngIf="isOwner && !editing"
+          (click)="beginEdit()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <section class="edit-panel" *ngIf="isOwner && editing">
+    <h2>Modifier le produit</h2>
+    <form [formGroup]="form" (ngSubmit)="submitEdit()">
+      <div class="form-grid">
+        <label>
+          Nom du produit
+          <input type="text" formControlName="title" />
+        </label>
+
+        <label class="textarea-field">
+          Description
+          <textarea rows="6" formControlName="description"></textarea>
+        </label>
+
+        <label>
+          Quantité en stock
+          <input type="number" min="0" formControlName="quantity" />
+        </label>
+
+        <label class="file-field">
+          Image du produit
+          <input type="file" accept="image/*" (change)="onFileSelected($event)" />
+          <span class="file-name" *ngIf="form.get('image')?.value">
+            {{ form.get('image')?.value }}
+          </span>
+        </label>
+      </div>
+
+      <div class="edit-actions">
+        <button
+          pButton
+          type="button"
+          label="Annuler"
+          class="p-button-text"
+          (click)="cancelEdit()"
+          [disabled]="updating"
+        ></button>
+        <button
+          pButton
+          type="submit"
+          label="Enregistrer"
+          icon="pi pi-check"
+          [disabled]="updating"
+        ></button>
+      </div>
+    </form>
+  </section>
+</section>
+
+<ng-template #loadingTemplate>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <span>Chargement du produit…</span>
+  </div>
+</ng-template>
+

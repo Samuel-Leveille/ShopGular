@@ -1,0 +1,80 @@
+<section class="search-container">
+  <header class="search-header">
+    <h1>Résultats de recherche</h1>
+    <p class="search-query" *ngIf="query">« {{ query }} »</p>
+  </header>
+
+  <p class="search-meta" *ngIf="!loading && query">
+    {{ totalCount }} résultat{{ totalCount > 1 ? 's' : '' }} trouvé{{ totalCount > 1 ? 's' : '' }}.
+  </p>
+
+  <div class="search-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Recherche des produits...</span>
+  </div>
+
+  <div class="search-state" *ngIf="!loading && !query">
+    Saisissez un mot-clé dans la barre de recherche pour commencer.
+  </div>
+
+  <div class="search-state empty" *ngIf="!loading && query && totalCount === 0">
+    Aucun produit ne correspond à votre recherche.
+  </div>
+
+  <ul class="results-list" *ngIf="!loading && results.length > 0">
+    <li
+      *ngFor="let product of results"
+      class="result-item"
+      role="button"
+      tabindex="0"
+      (click)="viewProduct(product)"
+      (keydown.enter)="viewProduct(product)"
+      (keydown.space)="viewProduct(product); $event.preventDefault()"
+    >
+      <div class="thumbnail">
+        <img
+          *ngIf="product.image; else placeholder"
+          [src]="product.image"
+          [alt]="product.title"
+        />
+        <ng-template #placeholder>
+          <div class="placeholder">ShopGular</div>
+        </ng-template>
+      </div>
+      <div class="content">
+        <h2>{{ product.title }}</h2>
+        <p class="description">
+          {{ product.description }}
+        </p>
+        <div class="meta">
+          <span class="price">{{ product.price | currency: 'CAD' : 'symbol' : '1.0-0' }}</span>
+          <span class="stock">Stock : {{ product.quantity }}</span>
+        </div>
+      </div>
+    </li>
+  </ul>
+
+  <footer
+    class="pagination"
+    *ngIf="!loading && results.length > 0"
+  >
+    <button
+      type="button"
+      class="page-btn"
+      (click)="onPrevious()"
+      [disabled]="page <= 1"
+    >
+      Précédent
+    </button>
+    <span>Page {{ page }} sur {{ totalPages }}</span>
+    <button
+      type="button"
+      class="page-btn"
+      (click)="onNext()"
+      [disabled]="page >= totalPages"
+    >
+      Suivant
+    </button>
+  </footer>
+</section>
+

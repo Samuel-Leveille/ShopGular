@@ -53,3 +53,40 @@ main {
 #searchIcon {
     font-size: xx-large;
 }
+
+@media (max-width: 1024px) {
+    main {
+        margin-left: 160px;
+        margin-right: 160px;
+    }
+
+    #title {
+        margin-left: 0;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        margin-left: 1.5rem;
+        margin-right: 1.5rem;
+    }
+
+    #title {
+        font-size: 2.4rem;
+    }
+
+    #searchBarDiv {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    #searchBar {
+        width: 100%;
+    }
+
+    #searchButton {
+        width: 100%;
+        border-radius: 10px;
+    }
+}

@@ -80,6 +80,57 @@ public class SellerController : ControllerBase
 
         return Ok(productDto);
     }
+
+    [Authorize]
+    [HttpPut("products/{productId:long}")]
+    public async Task<IActionResult> UpdateProduct(long productId, [FromForm] UpdateProductRequest request)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userService.GetUserById(userId);
+        if (user is not backend.Models.Seller seller)
+        {
+            return Forbid();
+        }
+
+        var title = request.Title?.Trim();
+        var description = request.Description?.Trim();
+        var quantityRaw = request.Quantity?.Trim();
+
+        if (string.IsNullOrWhiteSpace(title) ||
+            string.IsNullOrWhiteSpace(description) ||
+            string.IsNullOrWhiteSpace(quantityRaw))
+        {
+            return BadRequest(new { message = "Les champs Titre, Description et Quantité sont requis." });
+        }
+
+        if (!int.TryParse(quantityRaw, out var quantity) || quantity < 0)
+        {
+            return BadRequest(new { message = "La quantité doit être un nombre entier positif ou nul." });
+        }
+
+        string? imagePath = null;
+        if (request.ImageFile != null && request.ImageFile.Length > 0)
+        {
+            imagePath = await SaveImageAsync(request.ImageFile);
+            if (imagePath == null)
+            {
+                return BadRequest(new { message = "Impossible de sauvegarder la nouvelle image." });
+            }
+        }
+
+        var dto = new UpdateProductDto(title, description, quantity, imagePath);
+        var updated = await _sellerService.UpdateProductAsync(seller.Id, productId, dto);
+        if (updated == null)
+        {
+            return NotFound(new { message = "Produit introuvable ou accès refusé." });
+        }
+
+        return Ok(updated);
+    }
     private static int? ParseNullableInt(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
